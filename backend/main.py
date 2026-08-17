@@ -1,19 +1,27 @@
-from fastapi import FastAPI
-from scalar_fastapi import get_scalar_api_reference
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
 from app.api.routes.auth import router as auth_router
+from app.core.exceptions import ServiceError
 
 
 app = FastAPI()
 app.include_router(auth_router)
 
 
+@app.exception_handler(ServiceError)
+async def service_error_handler(_request: Request, exc: ServiceError) -> JSONResponse:
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers=exc.headers,
+    )
+
+
 @app.get("/scalar", include_in_schema=False)
 async def scalar_docs():
-    return get_scalar_api_reference(
-        openapi_url=app.openapi_url,
-        title=f"{app.title} API Reference",
-    )
+    """Keep the legacy docs URL working without a mandatory Scalar import."""
+    return {"docs_url": "/docs", "message": "Use FastAPI's built-in API docs"}
 
 
 @app.get("/health")

@@ -1,19 +1,17 @@
 import asyncio
 from logging.config import fileConfig
 from typing import Any, cast
-
+from app.models import Project, ProjectSource, RefreshToken, User  # noqa: F401
 from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from app.core.database_config import DatabaseSettings
 from app.models.base import Base
-from app.models.refresh_token import RefreshToken
-from app.models.user import User
 
 
-# Importing each model registers its table with Base.metadata for autogenerate.
-_ = (User, RefreshToken)
+# Importing app.models registers every table with Base.metadata for autogenerate.
+_ = (Project, ProjectSource, RefreshToken, User)
 
 config = context.config
 

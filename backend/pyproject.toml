@@ -14,5 +14,7 @@ dependencies = [
     "pydantic-settings>=2.14.2",
     "pyjwt>=2.13.0",
     "scalar-fastapi==1.8.2",
+    "sqlmodel>=0.0.39",
+    "supabase>=2.31.0",
     "uvicorn>=0.51.0",
 ]

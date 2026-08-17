@@ -26,6 +26,7 @@ def create_access_token(user: User) -> str:
         "sub": str(user.id),
         "type": "access",
         "ver": user.token_version,
+        "jti": str(uuid4()),
         "iat": now,
         "exp": now + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
     }
@@ -56,7 +57,7 @@ def decode_token(token: str, expected_type: str) -> dict[str, Any]:
         token,
         settings.JWT_SECRET_KEY,
         algorithms=[settings.JWT_ALGORITHM],
-        options={"require": ["sub", "type", "ver", "exp"]},
+        options={"require": ["sub", "type", "ver", "jti", "iat", "exp"]},
     )
     if payload.get("type") != expected_type:
         raise jwt.InvalidTokenError("Unexpected token type")
