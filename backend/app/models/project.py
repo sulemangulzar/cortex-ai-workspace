@@ -1,11 +1,16 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
-
-from sqlalchemy import DateTime, Enum as SQLEnum, ForeignKey, String, Text, func
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-
 from app.models.base import Base
+from sqlalchemy import (
+    DateTime,
+    Enum as SQLEnum,
+    ForeignKey,
+    String,
+    Text,
+    func,
+)
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.enums import ProjectStatus
 
 if TYPE_CHECKING:
@@ -27,7 +32,7 @@ class Project(Base):
     )
 
     name: Mapped[str] = mapped_column(
-        String(255),
+        String,
         nullable=False,
     )
 

@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     AWS_SECRET_ACCESS_KEY: str | None = None
     AWS_REGION: str = "auto"
     BUCKET_NAME: str | None = None
+    MAX_UPLOAD_SIZE_BYTES: int = 100 * 1024 * 1024
 
     model_config = SettingsConfigDict(
         env_file=BACKEND_DIR / ".env",
@@ -46,6 +47,8 @@ class Settings(BaseSettings):
             raise ValueError("REFRESH_TOKEN_EXPIRE_MINUTES must be positive")
         if self.COOKIE_SAMESITE == "none" and not self.COOKIE_SECURE:
             raise ValueError("COOKIE_SECURE must be enabled when SameSite is 'none'")
+        if self.MAX_UPLOAD_SIZE_BYTES <= 0:
+            raise ValueError("MAX_UPLOAD_SIZE_BYTES must be positive")
         return self
 
     def validate_storage_settings(self) -> None:

@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from scalar_fastapi import get_scalar_api_reference
 from app.api.routes.project import router as project_router
+from app.api.routes.project_source import router as project_source_router
 from app.api.routes.auth import router as auth_router
 from app.core.exceptions import ServiceError
 
@@ -9,6 +10,7 @@ from app.core.exceptions import ServiceError
 app = FastAPI()
 app.include_router(auth_router)
 app.include_router(project_router)
+app.include_router(project_source_router)
 
 
 

@@ -30,3 +30,13 @@ class ConflictError(ServiceError):
 class NotFoundError(ServiceError):
     status_code = 404
     detail = "Resource not found"
+
+
+class PayloadTooLargeError(ServiceError):
+    status_code = 413
+    detail = "Uploaded file is too large"
+
+
+class StorageError(ServiceError):
+    status_code = 502
+    detail = "File storage operation failed"
