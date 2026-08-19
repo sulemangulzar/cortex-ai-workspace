@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 from app.models.base import Base
+
 from sqlalchemy import (
     DateTime,
     Enum as SQLEnum,
@@ -14,6 +15,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.enums import ProjectStatus
 
 if TYPE_CHECKING:
+    from app.models.build_request import BuildRequest
+    from app.models.chat import Chat
+    from app.models.engineering_run import EngineeringRun
     from app.models.project_source import ProjectSource
 
 
@@ -68,3 +72,16 @@ class Project(Base):
         back_populates="project",
         cascade="all, delete-orphan",
     )
+    chats: Mapped[list["Chat"]] = relationship(
+        back_populates="project",
+        cascade="all, delete-orphan",
+    )
+    build_requests: Mapped[list["BuildRequest"]] = relationship(
+        back_populates="project",
+        cascade="all, delete-orphan",
+    )
+    engineering_runs: Mapped[list["EngineeringRun"]] = relationship(
+        back_populates="project",
+        cascade="all, delete-orphan",
+    )
+

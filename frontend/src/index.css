@@ -20,5 +20,10 @@ body {
 
 button,
 a {
+  cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+button:disabled {
+  cursor: not-allowed;
 }

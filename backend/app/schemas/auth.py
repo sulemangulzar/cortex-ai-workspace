@@ -9,7 +9,7 @@ class SignupRequest(BaseModel):
     password: str = Field(min_length=8, max_length=128)
     first_name: str = Field(min_length=1, max_length=100)
     last_name: str = Field(min_length=1, max_length=100)
-    username: str | None = Field(default=None, min_length=3, max_length=50)
+    username: str = Field(min_length=3, max_length=50)
 
     @field_validator("email")
     @classmethod
@@ -23,13 +23,13 @@ class SignupRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    identifier: str = Field(min_length=1, max_length=320)
     password: str = Field(min_length=1, max_length=128)
 
-    @field_validator("email")
+    @field_validator("identifier")
     @classmethod
-    def normalize_email(cls, value: EmailStr) -> str:
-        return str(value).strip().lower()
+    def normalize_identifier(cls, value: str) -> str:
+        return value.strip().lower()
 
 
 class UserUpdateRequest(BaseModel):
@@ -54,7 +54,7 @@ class UserResponse(BaseModel):
 
     id: UUID
     email: EmailStr
-    username: str | None
+    username: str
     first_name: str
     last_name: str
     is_active: bool

@@ -18,6 +18,15 @@ class UserRepository:
             select(User).where(func.lower(User.email) == email.lower())
         )
 
+    async def get_by_identifier(self, identifier: str) -> User | None:
+        normalized = identifier.strip().lower()
+        return await self.session.scalar(
+            select(User).where(
+                (func.lower(User.email) == normalized)
+                | (func.lower(User.username) == normalized)
+            )
+        )
+
     def add(self, user: User) -> None:
         self.session.add(user)
 

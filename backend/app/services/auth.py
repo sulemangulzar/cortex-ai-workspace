@@ -59,9 +59,9 @@ class AuthService:
         return user
 
     async def login(self, payload: LoginRequest) -> AuthSession:
-        user = await self.users.get_by_email(str(payload.email))
+        user = await self.users.get_by_identifier(payload.identifier)
         if user is None or not verify_hash(payload.password, user.hashed_password):
-            raise AuthenticationError("Invalid email or password")
+            raise AuthenticationError("Invalid email/username or password")
         if not user.is_active:
             raise InactiveAccountError()
 

@@ -7,6 +7,7 @@ from app.models.base import Base
 from app.models.enums import ProjectSourceStatus, SourceType
 
 if TYPE_CHECKING:
+    from app.models.engineering_run import EngineeringRun
     from app.models.project import Project
 
 
@@ -71,6 +72,8 @@ class ProjectSource(Base):
         nullable=False,
     )
 
-    project: Mapped["Project"] = relationship(
-        back_populates="sources"
+    project: Mapped["Project"] = relationship(back_populates="sources")
+    engineering_runs: Mapped[list["EngineeringRun"]] = relationship(
+        back_populates="project_source",
+        cascade="all, delete-orphan",
     )
