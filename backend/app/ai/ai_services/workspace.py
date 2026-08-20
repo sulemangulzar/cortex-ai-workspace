@@ -1,15 +1,14 @@
 import asyncio
 from pathlib import Path
 import shutil
-from posix import mkdir
 
 class WrokSpaceService:
-    def __init__(self, base_dir: str ="tmp/contex") -> None:
-        self.base_dir = base_dir
+    def __init__(self, base_dir: str | Path = "tmp/context") -> None:
+        self.base_dir = Path(base_dir)
 
     async def create(self, run_id : str) -> Path:
         workspace = self.base_dir / run_id
-        repo = self.base_dir / "repo"
+        repo = workspace / "repo"
 
         await asyncio.to_thread(
             workspace.mkdir,
