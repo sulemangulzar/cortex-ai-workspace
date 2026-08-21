@@ -8,6 +8,7 @@ dependencies = [
     "aioboto3>=15.5.0",
     "alembic>=1.18.5",
     "asyncpg>=0.31.0",
+    "crewai>=1.15.17",
     "fastapi[all]>=0.139.2",
     "greenlet>=3.5.4",
     "psycopg2>=2.9.12",

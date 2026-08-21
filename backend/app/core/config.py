@@ -12,13 +12,19 @@ class Settings(BaseSettings):
     """Application configuration loaded from environment variables and .env."""
 
     DATABASE_URL: str
+    FRONTEND_URL: str = "http://localhost:5173"
 
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: Literal["HS256", "HS384", "HS512"] = "HS256"
 
-    COOKIE_SECURE: bool = True
+    OPENAI_API_KEY: str | None = None
+    CREWAI_MODEL: str = "openai/gpt-4o-mini"
+    CREWAI_ENABLED: bool = True
+
+    # Local HTTP development cannot send Secure cookies; enable this in production over HTTPS.
+    COOKIE_SECURE: bool = False
     COOKIE_SAMESITE: Literal["lax", "strict", "none"] = "lax"
 
     # Optional at startup; required only when S3-backed file operations are used.

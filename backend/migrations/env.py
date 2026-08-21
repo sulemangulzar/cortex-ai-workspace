@@ -1,7 +1,7 @@
 import asyncio
 from logging.config import fileConfig
 
-from app.models import Project, ProjectSource, RefreshToken, User  # noqa: F401
+import app.models  # noqa: F401
 from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
@@ -11,8 +11,6 @@ from app.models.base import Base
 
 
 # Importing app.models registers every table with Base.metadata for autogenerate.
-_ = (Project, ProjectSource, RefreshToken, User)
-
 config = context.config
 
 if config.config_file_name is not None:

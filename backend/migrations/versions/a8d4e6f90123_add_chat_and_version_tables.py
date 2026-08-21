@@ -8,13 +8,16 @@ from collections.abc import Sequence
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 revision: str = "a8d4e6f90123"
 down_revision: str | None = "f2a7c9d4e801"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
-roles = sa.Enum("SYSTEM", "ASSISTANT", "USER", name="roles")
+roles = postgresql.ENUM(
+    "SYSTEM", "ASSISTANT", "USER", name="roles", create_type=False
+)
 
 
 def upgrade() -> None:

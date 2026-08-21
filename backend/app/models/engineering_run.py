@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from app.models.agent_step import AgentStep
     from app.models.build_request import BuildRequest
     from app.models.project import Project
-    from app.models.project_source import ProjectSource
+
 
 
 class EngineeringRun(Base):
@@ -29,11 +29,7 @@ class EngineeringRun(Base):
         nullable=False,
         index=True,
     )
-    project_source_id: Mapped[UUID] = mapped_column(
-        ForeignKey("project_sources.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
+
     status: Mapped[EngineeringRunStatus] = mapped_column(
         SQLEnum(
             EngineeringRunStatus,
@@ -58,7 +54,7 @@ class EngineeringRun(Base):
 
     build_request: Mapped["BuildRequest"] = relationship(back_populates="engineering_runs")
     project: Mapped["Project"] = relationship(back_populates="engineering_runs")
-    project_source: Mapped["ProjectSource"] = relationship(back_populates="engineering_runs")
+
     agent_steps: Mapped[list["AgentStep"]] = relationship(
         back_populates="engineering_run",
         cascade="all, delete-orphan",
