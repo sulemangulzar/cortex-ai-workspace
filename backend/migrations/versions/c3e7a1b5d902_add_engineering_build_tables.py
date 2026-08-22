@@ -18,27 +18,40 @@ depends_on: str | Sequence[str] | None = None
 build_request_status = postgresql.ENUM(
     "PENDING", "PROCESSING", "COMPLETED", "FAILED",
     name="build_request_status",
+    create_type=False,
 )
 engineering_run_status = postgresql.ENUM(
     "PENDING", "RUNNING", "COMPLETED", "FAILED", "CANCELLED",
     name="engineering_run_status",
+    create_type=False,
 )
 agent_type = postgresql.ENUM(
     "FEATURE_ANALYST", "ARCHITECT", "DEVELOPER", "QA",
     "SECURITY_REVIEWER", "PERFORMANCE_REVIEWER",
     "MAINTAINABILITY_REVIEWER", "TEST_COVERAGE_REVIEWER",
     name="agent_type",
+    create_type=False,
 )
 agent_step_status = postgresql.ENUM(
     "PENDING", "RUNNING", "COMPLETED", "FAILED", "SKIPPED",
     name="agent_step_status",
+    create_type=False,
 )
 
 
 def upgrade() -> None:
-    bind = op.get_bind()
-    for enum in (build_request_status, engineering_run_status, agent_type, agent_step_status):
-        enum.create(bind, checkfirst=True)
+    for name, values in (
+        ("build_request_status", "'PENDING', 'PROCESSING', 'COMPLETED', 'FAILED'"),
+        ("engineering_run_status", "'PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED'"),
+        ("agent_type", "'FEATURE_ANALYST', 'ARCHITECT', 'DEVELOPER', 'QA', 'SECURITY_REVIEWER', 'PERFORMANCE_REVIEWER', 'MAINTAINABILITY_REVIEWER', 'TEST_COVERAGE_REVIEWER'"),
+        ("agent_step_status", "'PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'SKIPPED'"),
+    ):
+        op.execute(
+            sa.text(
+                f"DO $$ BEGIN CREATE TYPE {name} AS ENUM ({values}); "
+                f"EXCEPTION WHEN duplicate_object THEN NULL; END $$;"
+            )
+        )
 
     op.create_table(
         "build_requests",
