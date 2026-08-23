@@ -1,18 +1,28 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from scalar_fastapi import get_scalar_api_reference
+
 from app.api.routes.project import router as project_router
 from app.api.routes.realtime import router as realtime_router
 from app.api.routes.run import router as run_router
-
 from app.api.routes.chat import router as chat_router
 from app.api.routes.auth import router as auth_router
+from app.core.database import engine
 from app.core.config import settings
 from app.core.exceptions import ServiceError
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    yield
+    if engine is not None:
+        await engine.dispose()
+
+
+app = FastAPI(title="Cortex Studio API", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.FRONTEND_URL, "http://127.0.0.1:5173"],
@@ -27,10 +37,7 @@ app.include_router(auth_router)
 app.include_router(project_router)
 app.include_router(run_router)
 app.include_router(realtime_router)
-
 app.include_router(chat_router)
-
-
 
 
 @app.exception_handler(ServiceError)
@@ -53,13 +60,3 @@ async def scalar_docs():
 @app.get("/health")
 def health():
     return {"status": "ok"}
-
-
-
-def main():
-    print("Hello from backend!")
-
-
-
-if __name__ == "__main__":
-    main()
