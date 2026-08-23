@@ -649,4 +649,3 @@ def run_test_coverage_review(
     if output is None:
         raise RuntimeError("Test coverage reviewer did not return a Pydantic output")
     return cast(TestCoverageReviewOutput, output)
-

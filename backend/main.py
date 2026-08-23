@@ -25,7 +25,12 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(title="Cortex Studio API", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL, "http://127.0.0.1:5173"],
+    allow_origins=[
+        settings.FRONTEND_URL.rstrip("/"),
+        "https://cortexai-workspace.vercel.app",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
     # Vite may move to another local port when 5173 is occupied.
     allow_origin_regex=r"https?://(localhost|127\.0\.0\.1):\d+",
     allow_credentials=True,
