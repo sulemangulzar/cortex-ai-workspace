@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, ForeignKey, String, func
+from sqlalchemy import DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -17,23 +17,14 @@ class Chat(Base):
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     project_id: Mapped[UUID] = mapped_column(
-        ForeignKey("projects.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
+        ForeignKey("projects.id", ondelete="CASCADE"), unique=True, index=True, nullable=False
     )
-    title: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
 
-    project: Mapped["Project"] = relationship(back_populates="chats")
-    chat_messages: Mapped[list["ChatMessage"]] = relationship(
+    project: Mapped["Project"] = relationship(back_populates="chat")
+    messages: Mapped[list["ChatMessage"]] = relationship(
         back_populates="chat",
         cascade="all, delete-orphan",
         order_by="ChatMessage.created_at",

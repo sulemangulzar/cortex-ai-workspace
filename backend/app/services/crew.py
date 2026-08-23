@@ -10,22 +10,35 @@ from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
 from app.core.database import AsyncSessionFactory
-from app.models.agent_step import AgentStep
-from app.models.build_request import BuildRequest
-from app.models.engineering_run import EngineeringRun
-from app.models.enums import AgentStepStatus, AgentType, BuildRequestStatus, EngineeringRunStatus
+from app.models.architecture_doc import ArchitectureDoc
+from app.models.code_file import CodeFile
+from app.models.execution_log import ExecutionLog
+from app.models.feature import Feature
+from app.models.review_finding import ReviewFinding
+from app.models.run import Run
+from app.models.enums import ExecutionLogSource, FindingSeverity, RunStatus, TaskStatus
 
-
-AGENT_BRIEFS: tuple[tuple[AgentType, str, str], ...] = (
-    (AgentType.feature_analyst, "Feature Analyst", "Clarify the requirement, users, scope, assumptions, and acceptance criteria."),
-    (AgentType.architect, "Architect", "Design a pragmatic architecture, data model, API boundaries, and implementation risks."),
-    (AgentType.developer, "Developer", "Turn the requirement and architecture into an implementation plan with concrete files and technical tasks."),
-    (AgentType.qa, "QA Engineer", "Create a verification strategy with test cases, edge cases, and acceptance checks."),
-    (AgentType.security_reviewer, "Security Reviewer", "Review the plan for authentication, authorization, secrets, data protection, and abuse risks."),
-    (AgentType.performance_reviewer, "Performance Reviewer", "Review scalability, latency, resource usage, caching, and likely bottlenecks."),
-    (AgentType.maintainability_reviewer, "Maintainability Reviewer", "Review code quality, modularity, observability, documentation, and operational complexity."),
-    (AgentType.test_coverage_reviewer, "Test Coverage Reviewer", "Review test coverage gaps and produce a final quality checklist for delivery."),
+AGENT_NAMES = (
+    "FEATURE_ANALYST",
+    "ARCHITECT",
+    "DEVELOPER",
+    "QA",
+    "SECURITY_REVIEWER",
+    "PERFORMANCE_REVIEWER",
+    "MAINTAINABILITY_REVIEWER",
+    "TEST_COVERAGE_REVIEWER",
 )
+
+AGENT_BRIEFS: dict[str, str] = {
+    "FEATURE_ANALYST": "Clarify features, user goals, scope, assumptions, and acceptance criteria.",
+    "ARCHITECT": "Design architecture, data model, API boundaries, and implementation risks.",
+    "DEVELOPER": "Create an implementation plan and representative code file outputs.",
+    "QA": "Create a verification strategy with test cases and edge cases.",
+    "SECURITY_REVIEWER": "Review authentication, authorization, secrets, data protection, and abuse risks.",
+    "PERFORMANCE_REVIEWER": "Review scalability, latency, resource usage, caching, and bottlenecks.",
+    "MAINTAINABILITY_REVIEWER": "Review modularity, observability, documentation, and operational complexity.",
+    "TEST_COVERAGE_REVIEWER": "Review test coverage gaps and final delivery checklist.",
+}
 
 
 def _now() -> datetime:
@@ -36,26 +49,26 @@ def _text(result: Any) -> str:
     return str(getattr(result, "raw", result)).strip()
 
 
-def _run_agent(agent_type: AgentType, name: str, brief: str, context: str) -> str:
-    # Imports stay inside the worker so the API can still boot when CrewAI is unavailable.
+def _run_agent(agent_name: str, context: str) -> str:
     from crewai import Agent, Crew, LLM, Process, Task
 
     llm = LLM(model=settings.CREWAI_MODEL, api_key=settings.OPENAI_API_KEY)
+    brief = AGENT_BRIEFS[agent_name]
     agent = Agent(
-        role=name,
+        role=agent_name.replace("_", " ").title(),
         goal=brief,
-        backstory="You are a careful senior engineer working inside the Cortex engineering team.",
+        backstory="You are a senior AI engineering agent working inside Cortex.",
         llm=llm,
         verbose=False,
         allow_delegation=False,
     )
     task = Task(
         description=(
-            f"Requirement and accumulated project context:\n{context}\n\n"
-            f"Your stage ({agent_type.value}) must: {brief}\n"
-            "Return a concise, structured response in Markdown with explicit decisions and risks."
+            f"Context so far:\n{context}\n\n"
+            f"Your responsibility: {brief}\n"
+            "Return concise Markdown with decisions, outputs, risks, and next actions."
         ),
-        expected_output="A useful engineering deliverable with decisions, assumptions, and risks.",
+        expected_output="Structured Markdown output for this agent stage.",
         agent=agent,
     )
     crew = Crew(agents=[agent], tasks=[task], process=Process.sequential, verbose=False)
@@ -67,83 +80,66 @@ async def run_engineering_run(run_id: UUID) -> None:
         return
 
     async with AsyncSessionFactory() as session:
-        run = await session.scalar(
-            select(EngineeringRun)
-            .options(selectinload(EngineeringRun.agent_steps), selectinload(EngineeringRun.build_request))
-            .where(EngineeringRun.id == run_id)
-        )
+        run = await session.scalar(select(Run).options(selectinload(Run.agent_tasks)).where(Run.id == run_id))
         if run is None:
             return
 
-        request = run.build_request
-        run.status = EngineeringRunStatus.running
+        run.status = RunStatus.running
         run.started_at = _now()
-        run.current_stage = "FEATURE_ANALYST"
-        request.status = BuildRequestStatus.processing
         await session.commit()
 
         try:
             if not settings.CREWAI_ENABLED:
-                raise RuntimeError("CrewAI execution is disabled. Set CREWAI_ENABLED=true to enable builds.")
+                raise RuntimeError("CrewAI execution is disabled. Set CREWAI_ENABLED=true.")
             if not settings.OPENAI_API_KEY:
-                raise RuntimeError("OPENAI_API_KEY is not configured. Add it to backend/.env before starting a build.")
+                raise RuntimeError("OPENAI_API_KEY is not configured in backend/.env.")
 
-            context = request.requirement
-            for agent_type, name, brief in AGENT_BRIEFS:
-                step = next((item for item in run.agent_steps if item.agent_type == agent_type), None)
-                if step is None:
-                    step = AgentStep(engineering_run_id=run.id, agent_type=agent_type)
-                    session.add(step)
-                    await session.flush()
-
-                step.status = AgentStepStatus.running
-                step.started_at = _now()
-                step.input_json = {"requirement": request.requirement, "context": context}
-                run.current_stage = agent_type.value
+            context = next((task.input for task in run.agent_tasks if task.input), "")
+            for task in sorted(run.agent_tasks, key=lambda item: AGENT_NAMES.index(item.agent_name)):
+                task.status = TaskStatus.running
+                task.started_at = _now()
                 await session.commit()
 
-                output = await asyncio.to_thread(_run_agent, agent_type, name, brief, context)
-                step.status = AgentStepStatus.completed
-                step.output_json = {"result": output}
-                step.completed_at = _now()
-                context = f"{context}\n\n## {name}\n{output}"
+                try:
+                    output = await asyncio.to_thread(_run_agent, task.agent_name, context)
+                except Exception as exc:
+                    task.status = TaskStatus.failed
+                    task.tool_output = str(exc)[:8000]
+                    task.finished_at = _now()
+                    run.status = RunStatus.failed
+                    run.finished_at = _now()
+                    session.add(ExecutionLog(run_id=run.id, source=ExecutionLogSource.tool_output, content=str(exc)[:8000]))
+                    await session.commit()
+                    return
 
-                if agent_type == AgentType.feature_analyst:
-                    run.requirements_json = {"requirement": request.requirement, "analysis": output}
-                elif agent_type == AgentType.architect:
-                    run.architecture_json = {"architecture": output}
-                elif agent_type in {
-                    AgentType.security_reviewer,
-                    AgentType.performance_reviewer,
-                    AgentType.maintainability_reviewer,
-                    AgentType.test_coverage_reviewer,
-                }:
-                    current_review = run.review_json or {}
-                    current_review[agent_type.value.lower()] = output
-                    run.review_json = current_review
+                task.output = output
+                task.status = TaskStatus.success
+                task.finished_at = _now()
+                context = f"{context}\n\n## {task.agent_name}\n{output}"
+                session.add(ExecutionLog(run_id=run.id, source=ExecutionLogSource.agent_reasoning, content=f"{task.agent_name}\n{output}"))
+
+                if task.agent_name == "FEATURE_ANALYST":
+                    session.add(Feature(run_id=run.id, title="Initial Feature Set", description=output, source_ref="FEATURE_ANALYST"))
+                elif task.agent_name == "ARCHITECT":
+                    session.add(ArchitectureDoc(run_id=run.id, content_json={"markdown": output}, version=1))
+                elif task.agent_name == "DEVELOPER":
+                    session.add(CodeFile(run_id=run.id, path="PLAN.md", content=output, revision_cycle=task.revision_cycle))
+                elif "REVIEWER" in task.agent_name or task.agent_name == "QA":
+                    severity = FindingSeverity.med if "risk" in output.lower() or "issue" in output.lower() else FindingSeverity.low
+                    session.add(ReviewFinding(run_id=run.id, reviewer_agent=task.agent_name, severity=severity, message=output[:4000], revision_cycle=task.revision_cycle))
                 await session.commit()
 
-            run.status = EngineeringRunStatus.completed
-            run.current_stage = "COMPLETED"
-            run.completed_at = _now()
-            request.status = BuildRequestStatus.completed
+            unresolved = await session.scalar(
+                select(ReviewFinding.id).where(ReviewFinding.run_id == run.id, ReviewFinding.resolved.is_(False), ReviewFinding.severity.in_([FindingSeverity.high, FindingSeverity.critical]))
+            )
+            run.status = RunStatus.needs_revision if unresolved else RunStatus.success
+            run.finished_at = _now()
             await session.commit()
         except Exception as exc:
             await session.rollback()
-            run = await session.scalar(
-                select(EngineeringRun).options(selectinload(EngineeringRun.agent_steps)).where(EngineeringRun.id == run_id)
-            )
-            request = await session.get(BuildRequest, run.build_request_id) if run else None
+            run = await session.scalar(select(Run).where(Run.id == run_id))
             if run is not None:
-                run.status = EngineeringRunStatus.failed
-                run.current_stage = "FAILED"
-                run.error_message = str(exc)[:4000]
-                run.completed_at = _now()
-                for step in run.agent_steps:
-                    if step.status == AgentStepStatus.running:
-                        step.status = AgentStepStatus.failed
-                        step.error_message = str(exc)[:4000]
-                        step.completed_at = _now()
-            if request is not None:
-                request.status = BuildRequestStatus.failed
-            await session.commit()
+                run.status = RunStatus.failed
+                run.finished_at = _now()
+                session.add(ExecutionLog(run_id=run.id, source=ExecutionLogSource.tool_output, content=str(exc)[:8000]))
+                await session.commit()

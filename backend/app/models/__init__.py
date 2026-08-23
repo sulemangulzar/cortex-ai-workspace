@@ -1,28 +1,31 @@
-"""SQLAlchemy model registry.
+"""SQLAlchemy model registry."""
 
-Importing this package registers every model with ``Base.metadata``.
-"""
-
-from app.models.agent_step import AgentStep
-from app.models.build_request import BuildRequest
+from app.models.agent_task import AgentTask
+from app.models.architecture_doc import ArchitectureDoc
 from app.models.chat import Chat
 from app.models.chat_message import ChatMessage
+from app.models.code_file import CodeFile
+from app.models.execution_log import ExecutionLog
+from app.models.feature import Feature
 from app.models.project import Project
-from app.models.project_source import ProjectSource
 from app.models.refresh_token import RefreshToken
-from app.models.engineering_run import EngineeringRun
-from app.models.project_versions import ProjectVersion
+from app.models.requirement_doc import RequirementDoc
+from app.models.review_finding import ReviewFinding
+from app.models.run import Run
 from app.models.user import User
 
 __all__ = [
-    "AgentStep",
-    "BuildRequest",
+    "AgentTask",
+    "ArchitectureDoc",
     "Chat",
     "ChatMessage",
+    "CodeFile",
+    "ExecutionLog",
+    "Feature",
     "Project",
-    "ProjectSource",
-    "ProjectVersion",
-    "EngineeringRun",
     "RefreshToken",
+    "RequirementDoc",
+    "ReviewFinding",
+    "Run",
     "User",
 ]

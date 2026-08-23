@@ -14,11 +14,7 @@ class ProjectService:
         self.projects = ProjectRepository(session)
 
     async def create(self, user_id: UUID, payload: ProjectCreate) -> Project:
-        project = Project(
-            user_id=user_id,
-            name=payload.name,
-            description=payload.description,
-        )
+        project = Project(user_id=user_id, name=payload.name)
         self.projects.add(project)
         await self.session.commit()
         await self.session.refresh(project)
@@ -33,16 +29,10 @@ class ProjectService:
             raise NotFoundError("Project not found")
         return project
 
-    async def update(
-        self,
-        user_id: UUID,
-        project_id: UUID,
-        payload: ProjectUpdate,
-    ) -> Project:
+    async def update(self, user_id: UUID, project_id: UUID, payload: ProjectUpdate) -> Project:
         project = await self.get(user_id, project_id)
-        for field, value in payload.model_dump(exclude_unset=True).items():
-            setattr(project, field, value)
-
+        if payload.name is not None:
+            project.name = payload.name
         await self.session.commit()
         await self.session.refresh(project)
         return project

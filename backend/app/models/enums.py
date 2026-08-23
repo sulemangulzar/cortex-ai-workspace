@@ -1,60 +1,34 @@
-# enums.py
-
 from enum import Enum
 
 
-class ProjectStatus(str, Enum):
-    created = "CREATED"
-    ready = "READY"
-    processing = "PROCESSING"
-    completed = "COMPLETED"
-    failed = "FAILED"
-
-class BuildRequestStatus(str, Enum):
-    pending = "PENDING"
-    processing = "PROCESSING"
-    completed = "COMPLETED"
-    failed = "FAILED"
+class RunStatus(str, Enum):
+    pending = "pending"
+    running = "running"
+    needs_revision = "needs_revision"
+    success = "success"
+    failed = "failed"
 
 
-class EngineeringRunStatus(str, Enum):
-    pending = "PENDING"
-    running = "RUNNING"
-    completed = "COMPLETED"
-    failed = "FAILED"
-    cancelled = "CANCELLED"
+class TaskStatus(str, Enum):
+    pending = "pending"
+    running = "running"
+    success = "success"
+    failed = "failed"
 
 
-class AgentStepStatus(str, Enum):
-    pending = "PENDING"
-    running = "RUNNING"
-    completed = "COMPLETED"
-    failed = "FAILED"
-    skipped = "SKIPPED"
+class FindingSeverity(str, Enum):
+    low = "low"
+    med = "med"
+    high = "high"
+    critical = "critical"
 
 
-class AgentType(str, Enum):
-    feature_analyst = "FEATURE_ANALYST"
-    architect = "ARCHITECT"
-    developer = "DEVELOPER"
-    qa = "QA"
-    security_reviewer = "SECURITY_REVIEWER"
-    performance_reviewer = "PERFORMANCE_REVIEWER"
-    maintainability_reviewer = "MAINTAINABILITY_REVIEWER"
-    test_coverage_reviewer = "TEST_COVERAGE_REVIEWER"
+class ExecutionLogSource(str, Enum):
+    tool_output = "tool_output"
+    agent_reasoning = "agent_reasoning"
 
 
-class Roles(str, Enum):
-    system = "SYSTEM"
-    assistant = "ASSISTANT"
-    user = "USER"
-
-class ProjectSourceStatus(str, Enum):
-    uploading = "UPLOADING"
-    uploaded = "UPLOADED"
-    failed = "FAILED"
-
-
-class SourceType(str, Enum):
-    zip = "ZIP"
-    github_repo = "GITHUB_REPOSITORY"
+class ChatMessageRole(str, Enum):
+    user = "user"
+    assistant = "assistant"
+    system = "system"
