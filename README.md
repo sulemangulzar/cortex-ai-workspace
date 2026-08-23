@@ -32,7 +32,22 @@ This repository is configured so Vercel can deploy the frontend from `frontend/`
    - `VITE_API_URL=https://your-backend-domain.com`
 6. Deploy.
 
-The frontend needs a deployed API because the app calls FastAPI routes and opens a websocket connection. Vercel static hosting is a good fit for the React app; deploy the FastAPI backend separately on a service such as Render, Railway, Fly.io, or a VPS.
+The frontend needs a deployed API because the app calls FastAPI routes. The backend can also be deployed to Vercel from the `backend/` root, using the backend `vercel.json`.
+
+## Backend On Vercel
+
+1. In Vercel, create another project from the same repo.
+2. Set **Root Directory** to `backend`.
+3. Add the backend environment variables from `backend/.env.example`.
+4. Deploy.
+5. Run migrations against the production database:
+
+```bash
+cd backend
+uv run alembic upgrade head
+```
+
+6. Set the frontend project's `VITE_API_URL` to the backend Vercel URL.
 
 ## Backend Production Notes
 

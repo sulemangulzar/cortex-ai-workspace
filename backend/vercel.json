@@ -1,0 +1,8 @@
+{
+  "functions": {
+    "main.py": {
+      "maxDuration": 300,
+      "excludeFiles": "{.venv/**,__pycache__/**,.pytest_cache/**,.mypy_cache/**,.ruff_cache/**,.ropeproject/**,migrations/__pycache__/**,app/**/__pycache__/**}"
+    }
+  }
+}

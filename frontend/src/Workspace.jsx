@@ -125,7 +125,15 @@ function Workspace({ token, onLogout, onTokenChange }) {
     let socket
     let reconnectTimer
     let refreshTimer
+    let pollTimer
     let closedByEffect = false
+
+    const poll = () => {
+      loadActivity().catch(() => undefined)
+      if (selected) loadProjectData(selected.id).catch(() => undefined)
+      const interval = runs.some((run) => RUNNING_STATUSES.has(run.status)) ? 3000 : 10000
+      pollTimer = window.setTimeout(poll, interval)
+    }
 
     const refreshFromEvent = (payload = {}) => {
       window.clearTimeout(refreshTimer)
@@ -158,13 +166,15 @@ function Workspace({ token, onLogout, onTokenChange }) {
     }
 
     connect()
+    pollTimer = window.setTimeout(poll, 10000)
     return () => {
       closedByEffect = true
       window.clearTimeout(reconnectTimer)
       window.clearTimeout(refreshTimer)
+      window.clearTimeout(pollTimer)
       socket?.close()
     }
-  }, [loadActivity, loadProjectData, loadProjects, selected, token])
+  }, [loadActivity, loadProjectData, loadProjects, runs, selected, token])
 
   const latestRun = useMemo(() => runs[0] ?? null, [runs])
   const selectedCodeFile = useMemo(() => {

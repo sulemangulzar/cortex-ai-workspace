@@ -113,7 +113,7 @@ postgrest==2.31.0
 posthog==5.4.0
 propcache==0.5.2
 protobuf==6.33.6
-psycopg2==2.9.12
+psycopg2-binary==2.9.12
 pwdlib==0.3.0
 pyarrow==25.0.1
 pybase64==1.5.0
