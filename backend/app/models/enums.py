@@ -4,6 +4,7 @@ from enum import Enum
 class RunStatus(str, Enum):
     pending = "pending"
     running = "running"
+    cancelled = "cancelled"
     needs_revision = "needs_revision"
     success = "success"
     failed = "failed"
@@ -14,6 +15,7 @@ class TaskStatus(str, Enum):
     running = "running"
     success = "success"
     failed = "failed"
+    cancelled = "cancelled"
 
 
 class FindingSeverity(str, Enum):

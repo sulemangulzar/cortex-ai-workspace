@@ -3,8 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from scalar_fastapi import get_scalar_api_reference
 from app.api.routes.project import router as project_router
+from app.api.routes.realtime import router as realtime_router
+from app.api.routes.run import router as run_router
 
-from app.api.routes.build import router as build_router
+from app.api.routes.chat import router as chat_router
 from app.api.routes.auth import router as auth_router
 from app.core.config import settings
 from app.core.exceptions import ServiceError
@@ -19,11 +21,14 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition"],
 )
 app.include_router(auth_router)
 app.include_router(project_router)
+app.include_router(run_router)
+app.include_router(realtime_router)
 
-app.include_router(build_router)
+app.include_router(chat_router)
 
 
 
