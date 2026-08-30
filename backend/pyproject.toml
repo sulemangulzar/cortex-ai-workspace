@@ -3,7 +3,7 @@ name = "backend"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.13,<3.14"
 dependencies = [
     "aioboto3>=15.5.0",
     "alembic>=1.18.5",
@@ -12,6 +12,8 @@ dependencies = [
     "crewai>=1.15.17",
     "fastapi[all]>=0.139.2",
     "greenlet>=3.5.4",
+    "httpx>=0.28.1",
+    "mcp[cli]>=1.28.1",
     "psycopg2-binary>=2.9.12",
     "pwdlib[argon2]>=0.3.0",
     "pydantic-settings>=2.14.2",
